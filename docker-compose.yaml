@@ -1,0 +1,25 @@
+version: 'v1.0'
+services:
+  visual-rag:
+    working_dir: /root/workspace/visual-rag
+    build: ./
+    container_name: visual-rag
+    image: visual-rag:v1.0
+    ports:
+      - "9999:9999"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    # 重启机制
+    restart: always
+    volumes:
+      - /home/tarena/code/workspace/models:/root/workspace/models
+      - ./:/root/workspace/visual-rag
+
+    command: ./start_all.sh
+networks:
+  default:
+    name: visual-rag
