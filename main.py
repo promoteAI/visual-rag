@@ -2,6 +2,7 @@ import ray
 import requests
 from fastapi import FastAPI
 from ray import serve
+from config import *
 
 app = FastAPI()
 
@@ -21,7 +22,11 @@ class FastAPIDeployment:
 def start_main_server():
     """构建"""
     print("主服务")
-    serve.run(FastAPIDeployment.bind(), route_prefix="/hello")
+    serve.run(FastAPIDeployment.bind(),
+              host=DEFAULT_HTTP_HOST,
+              port=DEFAULT_HTTP_PORT,
+              name=SERVE_DEFAULT_APP_NAME,
+              route_prefix="/hello")
 
 
 if __name__ == '__main__':

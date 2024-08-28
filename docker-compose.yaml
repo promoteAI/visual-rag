@@ -1,4 +1,6 @@
 version: 'v1.0'
+networks:
+  server:
 services:
   visual-rag:
     working_dir: /root/workspace/visual-rag
@@ -14,12 +16,48 @@ services:
             - driver: nvidia
               capabilities: [gpu]
     # 重启机制
-    restart: always
+    restart: on-failure
+    networks:
+      server:
+        aliases:
+          - visual-rag
     volumes:
       - /home/tarena/code/workspace/models:/root/workspace/models
       - ./:/root/workspace/visual-rag
 
-    command: ./start_all.sh
-networks:
-  default:
-    name: visual-rag
+    entrypoint: ["./start_all.sh"]
+
+  indexify:
+    image: tensorlake/indexify
+    entrypoint: [ "/indexify/docker_compose_start.sh" ]
+    ports:
+      - 8900:8900
+      - 8950:8950
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres/indexify
+      - INDEXIFY_DB_URL=postgres://postgres:postgres@postgres/indexify
+      - INDEXIFY_COORDINATOR_ADDR=localhost:8950
+    depends_on:
+      - postgres
+    networks:
+      server:
+        aliases:
+          - indexify
+    volumes:
+      - data:/tmp/indexify-blob-storage
+
+  postgres:
+    image: ankane/pgvector
+    restart: always
+    ports:
+      - 5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=indexify
+    networks:
+      server:
+        aliases:
+          - postgres
+
+volumes:
+  data:
